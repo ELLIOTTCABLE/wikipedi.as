@@ -19,7 +19,7 @@ var primaryHandler = function(incoming, outgoing){
    
    requestAsync({
       uri: "http://en.wikipedia.org/w/api.php", json: true, encoding: 'utf8'
-    , qs: {format: 'json', action: 'query', prop: 'info', titles: title}
+    , qs: {format: 'json', action: 'query', prop: 'info', titles: key}
    }).done(function(body){
       var pages   = body.query.pages
         , keys    = Object.keys(pages)
@@ -39,7 +39,7 @@ var primaryHandler = function(incoming, outgoing){
 
 
 var app = connect()
-   .use( function(_, out){ out.setHeader('X-Awesome-Doggie', 'Tucker') })
+   .use( function(_, out, next){ out.setHeader('X-Awesome-Doggie', 'Tucker'); next() })
    .use( connect.favicon() )
    .use( connect.logger('tiny') )
    
