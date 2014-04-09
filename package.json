@@ -1,0 +1,15 @@
+{     "author" : "ELLIOTTCABLE (http://ell.io/tt)"
+   
+,       "name" : "wikipedi.as"
+,    "private" :  true
+,    "version" : "0.0.1"
+
+,    "scripts" :{
+           "start" : "supervisor --poll-interval 2500 ./index.js"
+}
+
+,          "engines" :{"node":"~0.10.26"}
+,     "dependencies" :{"request"                : "~2.34.0"
+                     , "redis"                  : "~0.10.1"
+                     , "supervisor"             : "~0.5.7"
+                     , "lodash"                 : "~2.4.1"                                        }}
