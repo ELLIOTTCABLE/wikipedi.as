@@ -10,7 +10,8 @@
 
 ,          "engines" :{"node":"~0.10.26"}
 ,     "dependencies" :{"connect"                : "~2.14.4"
-                     , "request"                : "~2.34.0"
+                     , "request-promise"        : "~0.0.3"
+                     , "bluebird"               : "~1.2.1"
                      , "redis"                  : "~0.10.1"
                      , "supervisor"             : "~0.5.7"
                      , "lodash"                 : "~2.4.1"                                        }}
