@@ -3,6 +3,12 @@ var connect = require('connect')
 
 var app = connect()
    .use( connect.favicon() )
+   .use( function(incoming, outgoing, next){
+      if (incoming.url === '/') {
+         outgoing.statusCode = 404
+         return outgoing.end('No root.') }
+      next() })
+   
    .use( connect.logger('tiny') )
    
    .use( function(incoming, outgoing){
