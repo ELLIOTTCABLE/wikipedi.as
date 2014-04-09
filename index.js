@@ -1,36 +1,33 @@
-http        = require('http')
-http.client = require('request')
-url         = require('url')
+var connect = require('connect')
+  , request = require('request')
 
-server = http.createServer()
-
-server.on('request', function(request, response){
-   var title = request.url.slice(1)
+var app = connect()
+   .use( connect.favicon() )
+   .use( connect.logger('tiny') )
    
-   response.setHeader('X-Awesome-Doggie', 'Tucker')
-   
-   http.client.get({
-      uri: "http://en.wikipedia.org/w/api.php", json: true, encoding: 'utf8'
-    , qs: {format: 'json', action: 'query', titles: title}
-   }, function(err, _, body){
-      var pages   = body.query.pages
-        , keys    = Object.keys(pages)
-        , exists  = (pages[keys[0]].missing == null)
-      if (exists) {
-         response.statusCode = 301
-         response.setHeader('Location', "http://en.wikipedia.org/wiki/" + title)
-         
-         response.end('Bye!')
-      }
-      else {
-         response.statusCode = 404
-         response.end('Not found on Wikipedia.')
-      }
+   .use( function(incoming, outgoing){
+      outgoing.setHeader('X-Awesome-Doggie', 'Tucker')
       
-      console.log(title + ': ' + (exists? 'Extant.' : 'Missing!'))
-   })
+      var title = incoming.url.slice(1)
+      
+      request.get({
+         uri: "http://en.wikipedia.org/w/api.php", json: true, encoding: 'utf8'
+       , qs: {format: 'json', action: 'query', prop: 'info', titles: title}
+      }, function(err, _, body){
+         var pages   = body.query.pages
+           , keys    = Object.keys(pages)
+           , exists  = (pages[keys[0]].missing == null)
+         if (exists) {
+            outgoing.statusCode = 301
+            outgoing.setHeader('Location', "http://en.wikipedia.org/wiki/" + title)
+            
+            return outgoing.end('Bye!') }
+         else {
+            outgoing.statusCode = 404
+            return outgoing.end('Not found on Wikipedia.') }
+      }) // http.client.get en.wikipedia.org
    
-}) // server.on 'request'
+   }) // .use function(incoming, outgoing)
 
 
-server.listen(1337)
+require('http').createServer(app).listen(1337)
