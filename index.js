@@ -1,8 +1,14 @@
 var connect      = require('connect')
+  , raven        = require('raven')
   , Promise      = require('bluebird')
   , requestAsync = require('request-promise')
 
 Promise.longStackTraces() // “... a substantial performance penalty.” Okay.
+
+var _sentry = JSON.parse(require('fs').readFileSync(__dirname + '/.sentry'))
+   , sentry = new raven.Client('https://'+_sentry.public_key+':'+_sentry.secret_key+
+                               '@app.getsentry.com/'+_sentry.project_id)
+     sentry.patchGlobal()
 
 
 var app = connect()
@@ -38,6 +44,7 @@ var app = connect()
       }) // requestAsync
    }) // .use function(incoming, outgoing)
    
+   .use( raven.middleware.connect(sentry) )
    .use( function(err, incoming, outgoing, next){
       outgoing.statusCode = 500
       outgoing.end('Server error: ' + err.message)
