@@ -8,10 +8,8 @@ Promise.longStackTraces() // “... a substantial performance penalty.” Okay.
 var app = connect()
    .use( connect.favicon() )
    .use( function(incoming, outgoing, next){
-      if (incoming.url === '/') {
-         outgoing.statusCode = 404
-         return outgoing.end('No root.') }
-      next() })
+      if (incoming.url !== '/') return next()
+      throw new Error("There is no root!") })
    
    .use( connect.logger('tiny') )
    
@@ -39,6 +37,12 @@ var app = connect()
          
       }) // requestAsync
    }) // .use function(incoming, outgoing)
+   
+   .use( function(err, incoming, outgoing, next){
+      outgoing.statusCode = 500
+      outgoing.end('Server error: ' + err.message)
+      throw err
+   })
 
 
 require('http').createServer(app).listen(1337)
