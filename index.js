@@ -1,5 +1,6 @@
 var connect      = require('connect')
   , raven        = require('raven')
+  , prettify     = new (require('pretty-error'))
   , Promise      = require('bluebird')
   , requestAsync = require('request-promise')
 
@@ -13,7 +14,7 @@ try {
       , sentry = new raven.Client('https://'+_sentry.public_key+':'+_sentry.secret_key+
                                   '@app.getsentry.com/'+_sentry.project_id)
       sentry.patchGlobal()
-      process.on('uncaughtException', function(err){ console.log(err.stack); process.exit(1) })
+      process.on('uncaughtException', function(err){ console.error(prettify.render(err)) }) }
 catch (e) { if (e.code !== 'ENOENT') throw e }
 
 
