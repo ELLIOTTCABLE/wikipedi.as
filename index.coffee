@@ -8,6 +8,7 @@ requestAsync = require 'request-promise'
 redis = Promise.promisifyAll(require('redis').createClient())
 redis.client('setname', "wikipedi.as")
 
+prettify.skipNodeFiles()
 Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
 
 # Populate the .sentry file if you wish to report exceptions to http://getsentry.com/ (=
@@ -15,8 +16,10 @@ try
    _sentry = JSON.parse require('fs').readFileSync __dirname + '/.sentry'
    sentry  = new raven.Client(
       "https://#{_sentry.public_key}:#{_sentry.secret_key}@app.getsentry.com/#{_sentry.project_id}")
-   sentry.patchGlobal()
-   process.on 'uncaughtException', (err)-> console.error prettify.render err
+   sentry.patchGlobal                   (err)-> console.error prettify.render err
+   Promise.onPossiblyUnhandledRejection (err)->
+      sentry.captureError err
+      console.error prettify.render err
 catch err then throw err if e.code != 'ENOENT'
 
 
