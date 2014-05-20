@@ -29,20 +29,36 @@ user_agent = "#{PACKAGE.name}/#{PACKAGE.version} (#{PACKAGE.homepage}; by #{PACK
 wikipedias = (incoming, outgoing)->
    key = decodeURIComponent(incoming.url).slice 1
    
-   redis.lrangeAsync 'langs', 0, -1
-   .then (langs)->
-      articleExistsIn key, langs
-      
-      # ... we now know where the article exists, and what its normalized name is.
-      .then ({article, lang})->
-         outgoing.statusCode = 301
-         outgoing.setHeader 'Location', "http://#{lang}.wikipedia.org/wiki/#{article.title}"
-         return outgoing.end 'Bye!'
-
-      # ... If we can't find any article by this title on *any* Wikipedia,
-      .error (err)->
-         outgoing.statusCode = 404
-         outgoing.end err.message
+   # If we have previously resolved this key, respond with that.
+   redis.getAsync "article:#{key}:url"
+   .then (resolved)-> if resolved?
+      outgoing.statusCode = 301
+      outgoing.setHeader 'Location', resolved
+      return outgoing.end 'Bye!'
+   
+   else
+      redis.lrangeAsync 'langs', 0, -1
+      .then (langs)->
+         articleExistsIn key, langs
+         
+         # ... we now know where the article exists, and what its normalized name is.
+         .then ({article, lang})->
+            isDisambiguation(article.title, lang).then (isDisambiguation)->
+               unless isDisambiguation
+                  resolved = "http://#{lang}.wikipedia.org/wiki/#{article.title}"
+                  return redis.setAsync "article:#{key}:url", resolved
+                  .then ->
+                     outgoing.statusCode = 301
+                     outgoing.setHeader 'Location', resolved
+                     return outgoing.end 'Bye!'
+               
+               # ... and now we deal with disambiguations. Ugh.
+               #...
+         
+         # ... If we can't find any article by this title on *any* Wikipedia,
+         .error (err)->
+            outgoing.statusCode = 404
+            outgoing.end err.message
       
 
 # Determine if an article exists on *any* Wikipedia (within `langs`). Returns a promise for an
@@ -104,7 +120,6 @@ isDisambiguation = (title, lang)->
          transform: (resp)-> resp.query.pages[Object.keys(resp.query.pages)[0]]
    
    .reduce( (containing, page)->
-      console.log 'page:', page
       containing.concat page.categories || []
    , [] )
    .then (categories)->
