@@ -8,14 +8,14 @@ var redis = Promise.promisifyAll(require('redis').createClient())
     redis.client('setname', "wikipedi.as:disambiguation-sync")
 
 // Populate the .sentry file if you wish to report exceptions to http://getsentry.com/ (=
-//try {
-//   var _sentry = JSON.parse(require('fs').readFileSync(__dirname + '/.sentry'))
-//      , sentry = new raven.Client('https://'+_sentry.public_key+':'+_sentry.secret_key+
-//                                  '@app.getsentry.com/'+_sentry.project_id)
-//      sentry.patchGlobal()
-//      process.on('uncaughtException', function(err){ console.log(err.stack); process.exit(1) })
-//   }
-//catch (e) { if (e.code !== 'ENOENT') throw e }
+try {
+   var _sentry = JSON.parse(require('fs').readFileSync(__dirname + '/.sentry'))
+      , sentry = new raven.Client('https://'+_sentry.public_key+':'+_sentry.secret_key+
+                                  '@app.getsentry.com/'+_sentry.project_id)
+      sentry.patchGlobal()
+      process.on('uncaughtException', function(err){ console.log(err.stack); process.exit(1) })
+   }
+catch (e) { if (e.code !== 'ENOENT') throw e }
 
 
 var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.json')).languages
@@ -29,6 +29,7 @@ console.log('-- User-Agent:', require('util').inspect(user_agent))
 transaction = redis.multi()
 
 Promise.all(languages.map(function(language){
+   transaction.sadd('langs', language.tag)
    transaction.set('lang:'+language.tag+':name', language.name)
    transaction.del('lang:'+language.tag+':cats')
    return Promise.all(language.cats.map(function(cat){
@@ -38,8 +39,14 @@ Promise.all(languages.map(function(language){
    return Promise.promisify(transaction.exec, transaction)()
 })
 .done(function(){
-   console.log('-- All done!')
-   return redis.quitAsync() })
+   Promise.all(languages.map(function(language){
+      return redis.scardAsync('lang:'+language.tag+':cats') }))
+   .then(function(counts){
+      console.log('-- All done!')
+      languages.forEach(function(language, idx){
+         console.log(language.name+': '+counts[idx]) })
+      return redis.quitAsync()
+}) })
 
 
 function pushSubCategories(category, language, depth){ if (typeof depth != 'number') depth = 1
