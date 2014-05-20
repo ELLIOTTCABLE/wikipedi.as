@@ -18,12 +18,9 @@ var redis = Promise.promisifyAll(require('redis').createClient())
 //catch (e) { if (e.code !== 'ENOENT') throw e }
 
 
-// var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.json')).languages
-var languages = [
-   { "name": "English",    "tag": "en", "cats": ["Category:Disambiguation pages", "Category:All disambiguation pages"] }
-]
-  , PACKAGE = JSON.parse(require('fs').readFileSync(__dirname + '/package.json'))
-  , seen = []
+var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.json')).languages
+  , PACKAGE   = JSON.parse(require('fs').readFileSync(__dirname + '/package.json'))
+  , seen      = new Array
   , user_agent =
    PACKAGE.name+"/"+PACKAGE.version
       +" ("+PACKAGE.homepage+"; by "+PACKAGE.author+") DisambiguationCrawler"
@@ -73,7 +70,7 @@ function pushSubCategories(category, language, depth){ if (typeof depth != 'numb
    .map(function(member){
       // Do I need to do something with member.pageid, here? Not sure if I need it for further
       // API calls into the MediaWiki system.
-      if (depth < 3)
+      if (depth < 4)
          return Promise.delay(1000).then(function(){
             return pushSubCategories(member.title, language, depth+1) })
    })
