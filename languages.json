@@ -1,0 +1,12 @@
+{ "comment": "(Rankings from 2014-01-31, identical to http://Wikipedia.org.)", "languages": [
+   { "name": "English",    "tag": "en", "cats": ["Category:Disambiguation pages", "Category:All disambiguation pages"] }
+,  { "name": "Español",    "tag": "es", "cats": ["Categoría:Wikipedia:Desambiguación"] }
+,  { "name": "日本語",     "tag": "ja", "cats": ["Category:曖昧さ回避", "Category:すべての曖昧さ回避"] }
+,  { "name": "Deutsch",    "tag": "de", "cats": ["Kategorie:Begriffsklärung"] }
+,  { "name": "Русский",    "tag": "ru", "cats": ["Категория:Многозначные термины"] }
+,  { "name": "Français",   "tag": "fr", "cats": ["Catégorie:Homonymie"] }
+,  { "name": "Italiano",   "tag": "it", "cats": ["Categoria:Disambigua"] }
+,  { "name": "Português",  "tag": "pt", "cats": ["Categoria:Desambiguação"] }
+,  { "name": "Polski",     "tag": "pl", "cats": ["Kategoria:Strony ujednoznaczniające"] }
+,  { "name": "中文",       "tag": "zh", "cats": ["Category:消歧义"] }
+] }
