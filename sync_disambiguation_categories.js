@@ -22,9 +22,13 @@ var redis = Promise.promisifyAll(require('redis').createClient())
 var languages = [
    { "name": "English",    "tag": "en", "cats": ["Category:Disambiguation pages", "Category:All disambiguation pages"] }
 ]
-
+  , PACKAGE = JSON.parse(require('fs').readFileSync(__dirname + '/package.json'))
   , seen = []
+  , user_agent =
+   PACKAGE.name+"/"+PACKAGE.version
+      +" ("+PACKAGE.homepage+"; by "+PACKAGE.author+") DisambiguationCrawler"
 
+console.log('-- User-Agent:', require('util').inspect(user_agent))
 transaction = redis.multi()
 
 Promise.all(languages.map(function(language){
@@ -61,6 +65,7 @@ function pushSubCategories(category, language, depth){ if (typeof depth != 'numb
           , cmtype: 'subcat'
           , cmlimit: 'max'
       }})
+    , headers: { 'User-Agent': user_agent }
     , json: true
     , transform: function(resp){ return resp.query.categorymembers }
    })
@@ -69,6 +74,7 @@ function pushSubCategories(category, language, depth){ if (typeof depth != 'numb
       // Do I need to do something with member.pageid, here? Not sure if I need it for further
       // API calls into the MediaWiki system.
       if (depth < 3)
-         return pushSubCategories(member.title, language, depth+1)
+         return Promise.delay(1000).then(function(){
+            return pushSubCategories(member.title, language, depth+1) })
    })
 }
