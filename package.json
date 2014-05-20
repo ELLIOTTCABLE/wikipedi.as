@@ -5,12 +5,15 @@
 ,    "private" :  true
 ,    "version" : "0.0.1"
 
+, "repository" : { "type":"git", "url":"https://github.com/ELLIOTTCABLE/wikipedi.as.git" }
+
 ,    "scripts" :{
            "start" : "supervisor --poll-interval 2500 ./index.js"
 }
 
 ,          "engines" :{"node":"~0.10.26"}
 ,     "dependencies" :{"connect"                : "~2.14.4"
+                     , "st"                     : "~0.4.1"
                      , "request-promise"        : "~0.0.3"
                      , "bluebird"               : "~1.2.1"
                      , "redis"                  : "~0.10.1"
