@@ -3,14 +3,17 @@ var connect      = require('connect')
   , Promise      = require('bluebird')
   , requestAsync = require('request-promise')
 
-Promise.longStackTraces() // “... a substantial performance penalty.” Okay.
+            Promise.longStackTraces() // “... a substantial performance penalty.” Okay.
+var redis = Promise.promisifyAll(require('redis').createClient())
+    redis.client('setname', "wikipedi.as")
 
 // Populate the .sentry file if you wish to report exceptions to http://getsentry.com/ (=
 try {
    var _sentry = JSON.parse(require('fs').readFileSync(__dirname + '/.sentry'))
       , sentry = new raven.Client('https://'+_sentry.public_key+':'+_sentry.secret_key+
                                   '@app.getsentry.com/'+_sentry.project_id)
-        sentry.patchGlobal() }
+      sentry.patchGlobal()
+      process.on('uncaughtException', function(err){ console.log(err.stack); process.exit(1) })
 catch (e) { if (e.code !== 'ENOENT') throw e }
 
 
