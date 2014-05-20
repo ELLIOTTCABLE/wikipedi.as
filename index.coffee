@@ -24,7 +24,7 @@ PACKAGE    = JSON.parse require('fs').readFileSync __dirname + '/package.json'
 user_agent = "#{PACKAGE.name}/#{PACKAGE.version} (#{PACKAGE.homepage}; by #{PACKAGE.author})"
 
 wikipedias = (incoming, outgoing)->
-   key = incoming.url.slice 1
+   key = decodeURIComponent(incoming.url).slice 1
    
    requestAsync
       uri: "http://en.wikipedia.org/w/api.php", json: true, encoding: 'utf8'
