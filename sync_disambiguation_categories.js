@@ -27,9 +27,10 @@ var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.js
 
 console.log('-- User-Agent:', require('util').inspect(user_agent))
 transaction = redis.multi()
+transaction.del('langs')
 
 Promise.all(languages.map(function(language){
-   transaction.sadd('langs', language.tag)
+   transaction.rpush('langs', language.tag)
    transaction.set('lang:'+language.tag+':name', language.name)
    transaction.del('lang:'+language.tag+':cats')
    return Promise.all(language.cats.map(function(cat){

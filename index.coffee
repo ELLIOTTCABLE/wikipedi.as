@@ -26,43 +26,57 @@ user_agent = "#{PACKAGE.name}/#{PACKAGE.version} (#{PACKAGE.homepage}; by #{PACK
 wikipedias = (incoming, outgoing)->
    key = decodeURIComponent(incoming.url).slice 1
    
-   requestAsync
-      uri: "http://en.wikipedia.org/w/api.php", json: true, encoding: 'utf8'
-      qs: { format: 'json', action: 'query', prop: 'info', titles: key }
-   .done (body)->
-      pages   = body.query.pages
-      keys    = Object.keys pages
-      exists  = not pages[keys[0]].missing?
+   redis.lrangeAsync 'langs', 0, -1
+   .then (langs)->
+      articleExistsIn key, langs
       
-      if exists
+      # ... we now know where the article exists, and what its normalized name is.
+      .then ({article, lang})->
          outgoing.statusCode = 301
-         outgoing.setHeader 'Location', "http://en.wikipedia.org/wiki/" + key
+         outgoing.setHeader 'Location', "http://#{lang}.wikipedia.org/wiki/#{article.title}"
          return outgoing.end 'Bye!'
-      
-      else
+
+      # ... If we can't find any article by this title on *any* Wikipedia,
+      .error (err)->
          outgoing.statusCode = 404
-         return outgoing.end 'Not found on Wikipedia.'
+         outgoing.end err.message
+      
+
+# Determine if an article exists on *any* Wikipedia (within `langs`). Returns a promise for an
+# `{ title: <normalized title>, lang: <language code> }`. If no language matches the title in
+# question, the promise is rejected.
+articleExistsIn = (title, langs)->
+   scan = langs.reduceRight ((skip, lang)->->
+      articleExists(title, lang)
+      .then (article)-> { article: article, lang: lang }
+      .error skip
+   
+   ), -> Promise.reject new ReferenceError "'#{title}' could not be found on any Wikipedia"
+   
+   scan()
 
 # Determines if an article with the given title exists on Wikipedia. Returns a promise for the
-# article's normalized title. Rejects if no such article exists.
-articleExists = (title, language)->
+# article's Wikipedia info. Rejects if no such article exists.
+articleExists = (title, lang)->
       requestAsync
          url: url
-            hostname: "#{language.tag}.wikipedia.org"
+            hostname: "#{lang}.wikipedia.org"
             query:
                action: 'query', prop: 'info'
                titles: title
          headers: { 'User-Agent': user_agent }
          json: true
       .then ({query})->
-         return undefined if query.pages[-1]?
-         return query.pages[Object.keys(query.pages)[0]].title
+         page = query.pages[Object.keys(query.pages)[0]]
+         if page.missing?
+            return Promise.reject new ReferenceError "'#{page.title}' was not found" 
+         return page
 
 # Splits our disambiguation-category cache into manageable chunks, and queries Wikipedia as many
 # times as necessary to determine if the article passed is in any of those categories.
 # (Returns a promise.)
-isDisambiguation = (title, language)->
-   redis.smembersAsync "lang:#{language.tag}:cats"
+isDisambiguation = (title, lang)->
+   redis.smembersAsync "lang:#{lang}:cats"
    # ... split all the d-categories we know about into sets of 49 apiece, to appease the API limit
    #     of 50 at a time
    .reduce( (sets, category)->
@@ -76,7 +90,7 @@ isDisambiguation = (title, language)->
    .map (set)->
       requestAsync
          url: url
-            hostname: language.tag + '.wikipedia.org'
+            hostname: lang + '.wikipedia.org'
             query:
                action: 'query', prop: 'categories'
                titles: title
