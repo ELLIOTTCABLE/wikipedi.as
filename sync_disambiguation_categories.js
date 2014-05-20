@@ -18,53 +18,57 @@ var redis = Promise.promisifyAll(require('redis').createClient())
 //catch (e) { if (e.code !== 'ENOENT') throw e }
 
 
-var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.json')).languages
+// var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.json')).languages
+var languages = [
+   { "name": "English",    "tag": "en", "cats": ["Category:Disambiguation pages", "Category:All disambiguation pages"] }
+]
+
   , seen = []
 
+transaction = redis.multi()
+
 Promise.all(languages.map(function(language){
-   return redis.setAsync('lang:'+language.tag+':name', language.name)
-   .then(function(){
-      return redis.delAsync('lang:'+language.tag+':cats')
-   })
-   .then(function(){
-      return Promise.all(language.cats.map(function(cat){
-         return pushSubCategories(cat, language) }))
-   })
+   transaction.set('lang:'+language.tag+':name', language.name)
+   transaction.del('lang:'+language.tag+':cats')
+   return Promise.all(language.cats.map(function(cat){
+      return pushSubCategories(cat, language) }))
 }))
+.then(function(){
+   return Promise.promisify(transaction.exec, transaction)()
+})
 .done(function(){
    console.log('-- All done!')
    return redis.quitAsync() })
 
+
 function pushSubCategories(category, language, depth){ if (typeof depth != 'number') depth = 1
    if (seen.indexOf(category) !== -1) return;
    
-   return redis.saddAsync('lang:'+language.tag+':cats', category)
-   .then(function(){
-      seen.push(category)
-      console.log(language.tag+' '+depth+':', category)
-      
-      return requestAsync({
-         url: URL.format({
-            protocol: 'http:'
-          , hostname: language.tag + '.wikipedia.org'
-          , pathname: '/w/api.php'
-          , query: {
-               format: 'json'
-             , action: 'query'
-             , list: 'categorymembers'
-             , cmtitle: category
-             , cmtype: 'subcat'
-             , cmlimit: 'max'
-         }})
-       , json: true
-       , transform: function(resp){ return resp.query.categorymembers }
-      })
-      
-      .map(function(member){
-         // Do I need to do something with member.pageid, here? Not sure if I need it for further
-         // API calls into the MediaWiki system.
-         if (depth < 3)
-            return pushSubCategories(member.title, language, depth+1)
-      })
+   transaction.sadd('lang:'+language.tag+':cats', category)
+   seen.push(category)
+   console.log(language.tag+' '+depth+':', category)
+   
+   return requestAsync({
+      url: URL.format({
+         protocol: 'http:'
+       , hostname: language.tag + '.wikipedia.org'
+       , pathname: '/w/api.php'
+       , query: {
+            format: 'json'
+          , action: 'query'
+          , list: 'categorymembers'
+          , cmtitle: category
+          , cmtype: 'subcat'
+          , cmlimit: 'max'
+      }})
+    , json: true
+    , transform: function(resp){ return resp.query.categorymembers }
+   })
+   
+   .map(function(member){
+      // Do I need to do something with member.pageid, here? Not sure if I need it for further
+      // API calls into the MediaWiki system.
+      if (depth < 3)
+         return pushSubCategories(member.title, language, depth+1)
    })
 }
