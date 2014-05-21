@@ -2,6 +2,7 @@ URL          = require 'url'
 connect      = require 'connect'
 st           = require 'st'
 mustache     = require 'mustache'
+marked       = require 'marked'
 raven        = require 'raven'
 prettify     = new (require 'pretty-error')
 Promise      = require 'bluebird'
@@ -157,8 +158,11 @@ app = connect()
    
    redis.scardAsync('articles')
    .then (count)->
+      view =
+         markdown: -> (content, r)-> marked r content
+      
       o.setHeader 'Content-Type', 'text/html'
-      o.end mustache.render templates.landing, {}, templates
+      o.end mustache.render templates.landing, view, templates
 
 .use st
    path: 'Resources/'
