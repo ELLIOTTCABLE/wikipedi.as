@@ -5,8 +5,9 @@ prettify     = new (require 'pretty-error')
 Promise      = require 'bluebird'
 requestAsync = require 'request-promise' 
 
-redis = Promise.promisifyAll(require('redis').createClient())
-redis.client('setname', "wikipedi.as")
+redis = Promise.promisifyAll require('redis').createClient undefined, process.env['REDIS_HOST']
+redis.auth auth if auth = process.env['REDIS_AUTH'] # Should probably wrap the rest in the callback
+redis.client 'setname', 'wikipedi.as'
 
 prettify.skipNodeFiles()
 Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
