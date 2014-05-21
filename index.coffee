@@ -144,6 +144,11 @@ url = (u)->
    URL.format u
 
 
+nest_template = (template)-> -> (content, outer_render)->
+   view = Object.create this
+   view.yield = -> outer_render content
+   mustache.render template, view, templates
+
 app = connect()
 .use (_, o, next)->
    o.setHeader 'X-Awesome-Doggie', 'Tucker'
@@ -160,6 +165,7 @@ app = connect()
    .then (count)->
       view =
          markdown: -> (content, r)-> marked r content
+         framework: nest_template templates.framework
       
       o.setHeader 'Content-Type', 'text/html'
       o.end mustache.render templates.landing, view, templates
