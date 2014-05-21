@@ -1,5 +1,7 @@
 URL          = require 'url'
 connect      = require 'connect'
+st           = require 'st'
+mustache     = require 'mustache'
 raven        = require 'raven'
 prettify     = new (require 'pretty-error')
 Promise      = require 'bluebird'
@@ -26,6 +28,13 @@ catch err then throw err if e.code != 'ENOENT'
 
 PACKAGE    = JSON.parse require('fs').readFileSync __dirname + '/package.json'
 user_agent = "#{PACKAGE.name}/#{PACKAGE.version} (#{PACKAGE.homepage}; by #{PACKAGE.author})"
+templates  = require('glob').sync("Resources/*.mustache").reduce ((templates, filename)->
+   name = require('path').basename filename, '.mustache'
+   source = require('fs').readFileSync filename, encoding: 'utf8'
+   mustache.parse source
+   templates[name] = source
+   templates
+), {}
 
 wikipedias = (incoming, outgoing)->
    key = decodeURIComponent(incoming.url).slice 1
@@ -135,22 +144,39 @@ url = (u)->
 
 
 app = connect()
-.use (_, out, next)-> out.setHeader 'X-Awesome-Doggie', 'Tucker'; next()
-.use connect.favicon()
+.use (_, o, next)->
+   o.setHeader 'X-Awesome-Doggie', 'Tucker'
+   o.setHeader 'X-UA-Compatible', 'IE=edge'
+   next()
+
+.use connect.favicon('Resources/favicon.ico')
+
+# TODO: I should probably cache this.
+.use (i, o, next)->
+   return next() unless i.url == '/'
+   
+   redis.scardAsync('articles')
+   .then (count)->
+      o.setHeader 'Content-Type', 'text/html'
+      o.end mustache.render templates.landing, {}, templates
+
+.use st
+   path: 'Resources/'
+   index: false
+   passthrough: true
+
+.use st
+   path: 'bower_components/html5-boilerplate/'
+   index: false
+   passthrough: true
+
 .use connect.logger 'tiny'
-
-# We don't deign to handle index.html within the app. Let the user stick a reverse-proxy in
-# front of us, and let it do the static-file serving. This should never get reached.
-.use (incoming, outgoing, next)->
-   return next() if incoming.url != '/'
-   throw new Error "There is no root!"
-
 .use wikipedias
 
 .use raven.middleware.connect sentry
-.use (err, incoming, outgoing, next)->
-   outgoing.statusCode = 500
-   outgoing.end 'Server error: ' + err.message
+.use (err, _, o, next)->
+   o.statusCode = 500
+   o.end 'Server error: ' + err.message
    throw err
 
 .listen 1337
