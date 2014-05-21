@@ -70,7 +70,11 @@ So, next time you need want to link somebody to a Wikipedia article on a subject
       <a class='url' href="http://ell.io/tt">
          http://ell.io/tt</a>
    </address>
-   {{{footnotes}}}
+   <aside id='footnotes'><ol>
+   {{#footnotes}}
+      <li id='fn{{index}}'>{{{.}}}</li>
+   {{/footnotes}}
+   </ol></aside>
 </footer>
 </article>
 {{/framework}}

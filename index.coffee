@@ -148,10 +148,18 @@ url = (u)->
    URL.format u
 
 
+# --- ---- --- /!\ --- ---- --- #
+
 nest_template = (template)-> -> (content, outer_render)->
    view = Object.create this
    view.yield = -> outer_render content
    mustache.render template, view, templates
+
+register_footnote = (content)->
+   content = new String(content)
+   content.index = => @footnotes.indexOf(content) + 1
+   (@footnotes ||= new Array).push content
+   null
 
 app = connect()
 .use (_, o, next)->
@@ -171,6 +179,11 @@ app = connect()
          count: count
          markdown: -> (content, r)-> marked r content
          framework: nest_template templates.framework
+         
+         fn: -> (number)->
+            "<sup><a class='fnref' href='#fn#{number}'>(#{number})</a></sup>"
+            
+         footnote: -> (content, r)-> register_footnote.call this, marked r content
       
       o.setHeader 'Content-Type', 'text/html'
       o.end mustache.render templates.landing, view, templates
