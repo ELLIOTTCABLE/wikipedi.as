@@ -38,7 +38,10 @@ templates  = require('glob').sync("Resources/*.mustache").reduce ((templates, fi
 ), {}
 
 wikipedias = (incoming, outgoing)->
-   key = decodeURIComponent(incoming.url).slice 1
+   url = URL.parse incoming.url, true
+   key = url.pathname.slice 1
+   key = url.query.key unless key.length
+   key = decodeURIComponent key
    
    # If we have previously resolved this key, respond with that.
    redis.getAsync "article:#{key}:url"
