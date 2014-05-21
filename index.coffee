@@ -58,6 +58,7 @@ wikipedias = (incoming, outgoing)->
                unless isDisambiguation
                   resolved = "http://#{lang}.wikipedia.org/wiki/#{article.title}"
                   return redis.setAsync "article:#{key}:url", resolved
+                  .then -> redis.saddAsync "articles", key
                   .then ->
                      outgoing.statusCode = 301
                      outgoing.setHeader 'Location', resolved
@@ -164,6 +165,7 @@ app = connect()
    redis.scardAsync('articles')
    .then (count)->
       view =
+         count: count
          markdown: -> (content, r)-> marked r content
          framework: nest_template templates.framework
       
