@@ -1,3 +1,5 @@
 .sentry
 node_modules
 bower_components
+index.js
+Resources/*.css

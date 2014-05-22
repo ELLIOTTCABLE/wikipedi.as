@@ -8,8 +8,9 @@
 , "repository" : { "type":"git", "url":"https://github.com/ELLIOTTCABLE/wikipedi.as.git" }
 
 ,    "scripts" :{
-           "start" : "supervisor --poll-interval 2500 ./index.js"
-}
+             "hi" : "npm install ; bower install"
+   , "prepublish" : "./Scripts/build.sh"
+   ,      "start" : "supervisor --quiet --poll-interval 2500 ./index.js"                          }
 
 ,          "engines" :{"node":"~0.10.26"}
 ,     "dependencies" :{"connect"                : "~2.14.4"
@@ -17,6 +18,7 @@
                      , "glob"                   : "~3.2.10"
                      , "mustache"               : "~0.8.1"
                      , "marked"                 : "~0.3.2"
+                     , "less"                   : "~1.7.0"
                      , "request-promise"        : "~0.0.3"
                      , "bluebird"               : "~1.2.1"
                      , "redis"                  : "~0.10.1"
