@@ -194,6 +194,11 @@ app = connect()
    passthrough: true
 
 .use st
+   path: 'bower_components/'
+   index: false
+   passthrough: true
+
+.use st
    path: 'bower_components/html5-boilerplate/'
    index: false
    passthrough: true
