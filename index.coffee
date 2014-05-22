@@ -181,8 +181,8 @@ app = connect()
          framework: nest_template templates.framework
          
          fn: -> (number)->
-            "<sup><a class='fnref' href='#fn#{number}'>(#{number})</a></sup>"
-            
+            "<sup id='ref#{number}' class='fnref'><a href='#fn#{number}'>(#{number})</a></sup>"
+         
          footnote: -> (content, r)-> register_footnote.call this, marked r content
       
       o.setHeader 'Content-Type', 'text/html'

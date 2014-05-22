@@ -72,7 +72,9 @@ So, next time you need want to link somebody to a Wikipedia article on a subject
    </address>
    <aside id='footnotes'><ol>
    {{#footnotes}}
-      <li id='fn{{index}}'>{{{.}}}</li>
+      <li id='fn{{index}}'>
+         {{{.}}} <a class='ref-return' title="return to first occurence in text" href='#ref{{index}}'>&#x21a9;</a>
+      </li>
    {{/footnotes}}
    </ol></aside>
 </footer>
