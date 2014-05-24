@@ -8,19 +8,32 @@
 , "repository" : { "type":"git", "url":"https://github.com/ELLIOTTCABLE/wikipedi.as.git" }
 
 ,    "scripts" :{
-             "hi" : "npm install ; bower install"
-   , "prepublish" : "./Scripts/build.sh"
-   ,      "start" : "supervisor --quiet --poll-interval 2500 ./index.js"                          }
+            "hi!" : "npm install ; bower install ; gulp build"
+   ,      "start" : "supervisor --extensions 'js|coffee' --quiet --exec coffee ./index.coffee"    }
 
 ,          "engines" :{"node":"~0.10.26"}
-,     "dependencies" :{"connect"                : "~2.14.4"
+,     "dependencies" :{"coffee-script"          : "~1.7.1"
+                     , "connect"                : "~2.14.4"
                      , "st"                     : "~0.4.1"
                      , "glob"                   : "~3.2.10"
                      , "mustache"               : "~0.8.1"
                      , "marked"                 : "~0.3.2"
-                     , "less"                   : "~1.7.0"
                      , "request-promise"        : "~0.0.3"
                      , "bluebird"               : "~1.2.1"
                      , "redis"                  : "~0.10.1"
                      , "supervisor"             : "~0.5.7"
-                     , "lodash"                 : "~2.4.1"                                        }}
+                     , "lodash"                 : "~2.4.1"                                        }
+,  "devDependencies" :{"gulp"                   : "gulpjs/gulp#c331837"                           
+                     , "gulp-shell"             : "~0.2.5"
+                     , "gulp-if"                : "~1.2.0"
+                     , "gulp-plumber"           : "~0.6.2"
+                     , "gulp-watch"             : "~0.6.5"
+                     , "lazypipe"               : "~0.2.1"
+                     , "stream-combiner"        : "~0.2.0"
+                     , "gulp-concat"            : "~2.2.0"
+                     , "gulp-coffee"            : "~1.4.3"
+                     , "gulp-uglify"            : "~0.3.0"
+                     , "gulp-less"              : "~1.2.3"
+                     , "gulp-myth"              : "~0.3.1"
+                     , "gulp-minify-css"        : "~0.3.4"
+                     , "gulp-rimraf"            : "~0.1.0"                                        }}
