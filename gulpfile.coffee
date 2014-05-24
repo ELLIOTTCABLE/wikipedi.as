@@ -84,3 +84,4 @@ handle = (stream)->
    stream.on 'error', ->
       util.log.apply this, arguments
       stream.end()
+   return stream
