@@ -33,7 +33,7 @@ gulp.task 'build-css', ['clean-css'], ->
 gulp.task 'watch-css', (done)->
    plugin('watch') glob: paths.css, (_)->
       _  .pipe plugin('debug') title: 'css'
-         .pipe plugin('if') /[.]less$/, handle plugin('less')(paths: './Resources')
+         .pipe plugin('if') /[.]less$/, handle plugin('less') paths: './Resources'
          .pipe handle plugin('myth')()
 #        .pipe plugin('concat') 'main.css'
          .pipe handle plugin('minify-css') keepBreaks: yes
