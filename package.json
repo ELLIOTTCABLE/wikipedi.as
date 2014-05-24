@@ -19,6 +19,7 @@
                      , "mustache"               : "~0.8.1"
                      , "marked"                 : "~0.3.2"
                      , "request-promise"        : "~0.0.3"
+                     , "pretty-error"           : "~0.1.18"
                      , "bluebird"               : "~1.2.1"
                      , "redis"                  : "~0.10.1"
                      , "supervisor"             : "~0.5.7"

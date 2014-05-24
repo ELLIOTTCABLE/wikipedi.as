@@ -3,7 +3,6 @@ connect      = require 'connect'
 st           = require 'st'
 mustache     = require 'mustache'
 marked       = require 'marked'
-raven        = require 'raven'
 prettify     = new (require 'pretty-error')
 Promise      = require 'bluebird'
 requestAsync = require 'request-promise' 
@@ -17,6 +16,8 @@ Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
 
 # Populate the .sentry file if you wish to report exceptions to http://getsentry.com/ (=
 try
+   raven = require 'raven'
+   
    _sentry = JSON.parse require('fs').readFileSync __dirname + '/.sentry'
    sentry  = new raven.Client(
       "https://#{_sentry.public_key}:#{_sentry.secret_key}@app.getsentry.com/#{_sentry.project_id}")
@@ -24,7 +25,7 @@ try
    Promise.onPossiblyUnhandledRejection (err)->
       sentry.captureError err
       console.error prettify.render err
-catch err then throw err if e.code != 'ENOENT'
+catch err then throw err if err.code != 'ENOENT' and err.code != 'MODULE_NOT_FOUND'
 
 
 PACKAGE    = JSON.parse require('fs').readFileSync __dirname + '/package.json'
@@ -206,10 +207,10 @@ app = connect()
 .use connect.logger 'tiny'
 .use wikipedias
 
-.use raven.middleware.connect sentry
-.use (err, _, o, next)->
+app.use raven.middleware.connect sentry if raven
+app.use (err, _, o, next)->
    o.statusCode = 500
    o.end 'Server error: ' + err.message
    throw err
 
-.listen 1337
+app.listen 1337
