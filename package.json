@@ -24,9 +24,11 @@
                      , "redis"                  : "~0.10.1"
                      , "supervisor"             : "~0.5.7"
                      , "lodash"                 : "~2.4.1"                                        }
+
 ,  "devDependencies" :{"gulp"                   : "gulpjs/gulp#c331837"                           
                      , "gulp-shell"             : "~0.2.5"
                      , "gulp-if"                : "~1.2.0"
+                     , "gulp-debug"             : "~0.3.0"
                      , "gulp-plumber"           : "~0.6.2"
                      , "gulp-watch"             : "~0.6.5"
                      , "lazypipe"               : "~0.2.1"
