@@ -9,19 +9,21 @@
 
 {{#markdown}}
 [Wikipedia][] is a great source of information to share information with people in everyday
-conversation; but in this day and age, <http://en.wikipedia.org/wiki/Volkswagen_Passat> is a bit
-long for a link. Hell, on [Twitter][], all your friends will see of that link, is
-[http://en.wikipedia.org/wiki/Volkswage…](http://en.wikipedia.org/wiki/Volkswagen_Passat).
-(Wait, *what* am I about to click on?) To remedy what I see as an issue, I've thrown together this
-service: a semantic short-url permalink generator for Wikipedia articles.
+conversation; but in this day and age, [http://<wbr>en.wikipedia.org<wbr>/wiki<wbr>/Volkswagen_Passat][1]
+is a bit long for a link. Hell, on [Twitter][], all your friends will see of that link, is
+[http://<wbr>en.wikipedia.org<wbr>/wiki<wbr>/Volkswage…][1]. (Wait, *what* am I about to click on?)
+To remedy what I see as an issue, I've thrown together this service: a semantic short-url permalink
+generator for Wikipedia articles.
 
-When you use a URL like [http://wikipedi.as/Volkswagen_Passat](/Volkswagen_Passat), I'll generate
-a redirect for you. That redirect will function permenantly{{#fn}}1{{/fn}}, even if the page is
-moved! In addition, I will provide the ability to automatically [disambiguate][]{{#fn}}2{{/fn}}
+When you use a URL like [http://wikipedi.as<wbr>/Volkswagen_Passat](/Volkswagen_Passat), I'll
+generate a redirect for you. That redirect will function permenantly{{#fn}}1{{/fn}}, even if the
+page is moved! In addition, I will provide the ability to automatically [disambiguate][]{{#fn}}2{{/fn}}
 ambiguous slugs to the most relevant article.
 
 So, next time you need want to link somebody to a Wikipedia article on a subject, just remember
 `wikipedi.as`!
+
+   [1]: <http://en.wikipedia.org/wiki/Volkswagen_Passat>
 
 {{#footnote}}
    I really believe in some kind of *persistence* in this evanescent environment of our Web; but
