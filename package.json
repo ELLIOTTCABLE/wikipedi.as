@@ -15,7 +15,7 @@
    ,        "hi!" : "npm install && bower install && gulp build"
    ,      "start" : "app.js"    }
 
-,          "engines" :{"node":"~0.10.26"}
+,          "engines" :{"node":"~0.10.0"}
 ,     "dependencies" :{"coffee-script"          : "~1.7.1"
                      , "connect"                : "~2.14.4"
                      , "st"                     : "~0.4.1"
