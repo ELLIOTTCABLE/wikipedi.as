@@ -191,6 +191,7 @@ app = connect()
          
          footnote: -> (content, r)-> register_footnote.call this, marked r content
       
+      o.statusCode = 404 # XXX: Temporary.
       o.setHeader 'Content-Type', 'text/html'
       o.end mustache.render templates.landing, view, templates
 
