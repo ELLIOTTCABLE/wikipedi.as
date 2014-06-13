@@ -1,5 +1,4 @@
 var URL          = require('url')
-  , raven        = require('raven')
   , Promise      = require('bluebird')
   , requestAsync = require('request-promise')
 
@@ -10,12 +9,12 @@ var redis = Promise.promisifyAll(require('redis').createClient())
 // Populate the .sentry file if you wish to report exceptions to http://getsentry.com/ (=
 try {
    var _sentry = JSON.parse(require('fs').readFileSync(__dirname + '/.sentry'))
-      , sentry = new raven.Client('https://'+_sentry.public_key+':'+_sentry.secret_key+
+      , sentry = new require('raven').Client('https://'+_sentry.public_key+':'+_sentry.secret_key+
                                   '@app.getsentry.com/'+_sentry.project_id)
       sentry.patchGlobal()
       process.on('uncaughtException', function(err){ console.log(err.stack); process.exit(1) })
    }
-catch (e) { if (e.code !== 'ENOENT') throw e }
+catch (e) { if (e.code !== 'ENOENT' && e.code !== 'MODULE_NOT_FOUND') throw e }
 
 
 var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.json')).languages
