@@ -25,7 +25,9 @@
                      , "supervisor"             : "~0.5.7"
                      , "lodash"                 : "~2.4.1"                                        }
 
-,  "devDependencies" :{"gulp"                   : "gulpjs/gulp#c331837"                           
+,  "devDependencies" :{"bower"                  : "~1.3.5"
+                     , "gulp"                   : "gulpjs/gulp#c331837"                           
+                     , "gulp-util"              : "~2.2.17"
                      , "gulp-shell"             : "~0.2.5"
                      , "gulp-if"                : "~1.2.0"
                      , "gulp-debug"             : "~0.3.0"
