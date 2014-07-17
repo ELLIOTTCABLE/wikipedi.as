@@ -70,8 +70,11 @@ wikipedias = (incoming, outgoing)->
                      outgoing.setHeader 'Location', resolved
                      return outgoing.end 'Bye!'
                
-               # ... and now we deal with disambiguations. Ugh.
-               #...
+               # Temporarily ... at least, until I can write the code to properly handle them ...
+               resolved = "http://#{lang}.wikipedia.org/wiki/#{article.title}"
+               outgoing.statusCode = 301
+               outgoing.setHeader 'Location', resolved
+               return outgoing.end 'Bye!'
          
          # ... If we can't find any article by this title on *any* Wikipedia,
          .error (err)->
