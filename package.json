@@ -3,7 +3,7 @@
 ,       "name" : "wikipedi.as"
 ,   "homepage" : "http://wikipedi.as"
 ,    "private" :  true
-,    "version" : "0.0.1"
+,    "version" : "0.0.2"
 
 , "repository" : { "type":"git", "url":"https://github.com/ELLIOTTCABLE/wikipedi.as.git" }
 
