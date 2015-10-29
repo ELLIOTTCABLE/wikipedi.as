@@ -1,3 +1,4 @@
+debug        = require('debug') 'wikipedi.as:http'
 URL          = require 'url'
 connect      = require 'connect'
 st           = require 'st'
@@ -11,7 +12,9 @@ newrelic     = undefined
 raven        = undefined
 
 if process.env['NEW_RELIC_ENABLED'] == 'true'
-   try newrelic = require 'newrelic'
+   try
+      newrelic = require 'newrelic'
+      debug 'New Relic connected'
    catch err then throw err if err.code != 'MODULE_NOT_FOUND'
 
 redis = Promise.promisifyAll require('redis').createClient process.env['REDIS_URL']
@@ -19,6 +22,7 @@ redis.auth auth if auth = process.env['REDIS_AUTH'] # Should probably wrap the r
 
 redis.client 'setname', 'wikipedias', (err)->
    # swallow errors
+debug 'Redis connected'
 
 prettify.skipNodeFiles()
 Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
@@ -38,6 +42,8 @@ if process.env['SENTRY_DSN']
       Promise.onPossiblyUnhandledRejection (err)->
          sentry.captureError err
          console.error prettify.render err
+
+      debug 'Sentry connected'
    catch err then throw err if err.code != 'MODULE_NOT_FOUND'
 
 
@@ -49,16 +55,19 @@ templates  = require('glob').sync("Resources/*.mustache").reduce ((templates, fi
    templates[name] = source
    templates
 ), {}
+debug 'Templates loaded'
 
 wikipedias = (incoming, outgoing)->
    url = URL.parse incoming.url, true
    key = url.pathname.slice 1
    key = url.query.key unless key.length
    key = decodeURIComponent key
+   debug "Key requested: '%s'", key
 
    # If we have previously resolved this key, respond with that.
    redis.getAsync "article:#{key}:url"
    .then (resolved)-> if resolved?
+      debug "'%s' already cached as %s", key, resolved
       outgoing.statusCode = 301
       outgoing.setHeader 'Location', resolved
       return outgoing.end 'Bye!'
@@ -66,6 +75,7 @@ wikipedias = (incoming, outgoing)->
    else
       redis.lrangeAsync 'langs', 0, -1
       .then (langs)->
+         debug "'%s' isn't cached,", key
          articleExistsIn key, langs
 
          # ... we now know where the article exists, and what its normalized name is.
@@ -76,12 +86,14 @@ wikipedias = (incoming, outgoing)->
                   return redis.setAsync "article:#{key}:url", resolved
                   .then -> redis.saddAsync "articles", key
                   .then ->
+                     debug "'%s' cached to DB: ", key, resolved
                      outgoing.statusCode = 301
                      outgoing.setHeader 'Location', resolved
                      return outgoing.end 'Bye!'
 
                # Temporarily ... at least, until I can write the code to properly handle them ...
                resolved = "http://#{lang}.wikipedia.org/wiki/#{article.title}"
+               debug "'%s' is disambiguation, not cached to DB: ", key, resolved
                outgoing.statusCode = 302
                outgoing.setHeader 'Location', resolved
                return outgoing.end """
@@ -91,6 +103,7 @@ wikipedias = (incoming, outgoing)->
 
          # ... If we can't find any article by this title on *any* Wikipedia,
          .error (err)->
+            debug "'%s' doesn't exist on any of our Wikipedias", key
             outgoing.statusCode = 404
             outgoing.end err.message
 
@@ -101,7 +114,9 @@ wikipedias = (incoming, outgoing)->
 articleExistsIn = (title, langs)->
    scan = langs.reduceRight ((skip, lang)->->
       articleExists(title, lang)
-      .then (article)-> { article: article, lang: lang }
+      .then (article)->
+         debug "'%s' found on %s: %j", title, lang, article
+         return { article: article, lang: lang }
       .error skip
 
    ), -> Promise.reject new ReferenceError "'#{title}' could not be found on any Wikipedia"
@@ -122,6 +137,7 @@ articleExists = (title, lang)->
       .then ({query})->
          page = query.pages[Object.keys(query.pages)[0]]
          if page.missing?
+            debug "'%s' doesn't exist on %s.", title, lang
             return Promise.reject new ReferenceError "'#{page.title}' was not found"
          return page
 
@@ -157,6 +173,7 @@ isDisambiguation = (title, lang)->
       containing.concat page.categories || []
    , [] )
    .then (categories)->
+      debug "Disambiguation categories for '%s' (out of %d pages): %j", title, categories
       categories.length != 0
 
 # Generate a modify-able copy of the Wikipedia API URL
