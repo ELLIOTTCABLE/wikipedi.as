@@ -1,0 +1,11 @@
+{  "name":        "wikipedi.as",
+   "description": "The short-URL generator for Wikimedia properties.",
+   "scripts":     {},
+   "env": {
+      "DEBUG": {
+         "required": true },
+      "NEW_RELIC_ENABLED": "false",
+      "STUNNEL_ENABLED":   "false"
+  },
+  "addons":       [ "heroku-redis" ]
+}
