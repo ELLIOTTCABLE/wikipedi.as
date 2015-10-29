@@ -3,19 +3,27 @@ var URL          = require('url')
   , requestAsync = require('request-promise')
 
             Promise.longStackTraces() // “... a substantial performance penalty.” Okay.
-var redis = Promise.promisifyAll(require('redis').createClient())
-    redis.client('setname', "wikipedi.as:disambiguation-sync")
+var redis = Promise.promisifyAll(require('redis').createClient(undefined, process.env['REDIS_HOST']))
+  , auth = process.env['REDIS_AUTH']
+    if (auth) redis.auth(auth)
+    redis.client('setname', "wikipedi.as:disambiguation-sync", function(err){
+      /* Swallow errors. */ })
 
-// Populate the .sentry file if you wish to report exceptions to http://getsentry.com/ (=
-try {
-   var _sentry = JSON.parse(require('fs').readFileSync(__dirname + '/.sentry'))
-      , sentry = new require('raven').Client('https://'+_sentry.public_key+':'+_sentry.secret_key+
-                                  '@app.getsentry.com/'+_sentry.project_id)
-      sentry.patchGlobal()
-      process.on('uncaughtException', function(err){ console.log(err.stack); process.exit(1) })
-   }
-catch (e) { if (e.code !== 'ENOENT' && e.code !== 'MODULE_NOT_FOUND') throw e }
-
+// Populate SENTRY_DSN if you wish to report exceptions to http://getsentry.com/ (=
+if (process.env['SENTRY_DSN']) try {
+   var raven = require('raven')
+     , sentry = new raven.Client(process.env['SENTRY_DSN'])
+   
+   sentry.patchGlobal()
+   process.on('uncaughtException', function(err){
+      console.error(err)
+      process.exit(1) })
+   Promise.onPossiblyUnhandledRejection(function(err){
+      sentry.captureError(err)
+      console.error(err)
+      process.exit(1) })
+      
+} catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e }
 
 var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.json')).languages
   , PACKAGE   = JSON.parse(require('fs').readFileSync(__dirname + '/package.json'))

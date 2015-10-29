@@ -16,18 +16,19 @@ redis.client 'setname', 'wikipedi.as', (err)->
 prettify.skipNodeFiles()
 Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
 
-# Populate the .sentry file if you wish to report exceptions to http://getsentry.com/ (=
-try
-   raven = require 'raven'
-   
-   _sentry = JSON.parse require('fs').readFileSync __dirname + '/.sentry'
-   sentry  = new raven.Client(
-      "https://#{_sentry.public_key}:#{_sentry.secret_key}@app.getsentry.com/#{_sentry.project_id}")
-   sentry.patchGlobal                   (err)-> console.error prettify.render err
-   Promise.onPossiblyUnhandledRejection (err)->
-      sentry.captureError err
-      console.error prettify.render err
-catch err then throw err if err.code != 'ENOENT' and err.code != 'MODULE_NOT_FOUND'
+# Populate SENTRY_DSN if you wish to report exceptions to http://getsentry.com/ (=
+if process.env['SENTRY_DSN']
+   try
+      raven = require 'raven'
+      
+      sentry  = new raven.Client process.env['SENTRY_DSN']
+      
+      sentry.patchGlobal()
+      process.on 'uncaughtException',      (err)-> console.error prettify.render err 
+      Promise.onPossiblyUnhandledRejection (err)->
+         sentry.captureError err
+         console.error prettify.render err
+   catch err then throw err if err.code != 'MODULE_NOT_FOUND'
 
 
 PACKAGE    = JSON.parse require('fs').readFileSync __dirname + '/package.json'
