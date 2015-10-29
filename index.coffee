@@ -7,10 +7,10 @@ prettify     = new (require 'pretty-error')
 Promise      = require 'bluebird'
 requestAsync = require 'request-promise'
 
-redis = Promise.promisifyAll require('redis').createClient undefined, process.env['REDIS_HOST']
+redis = Promise.promisifyAll require('redis').createClient process.env['REDIS_URL']
 redis.auth auth if auth = process.env['REDIS_AUTH'] # Should probably wrap the rest in the callback
 
-redis.client 'setname', 'wikipedi.as', (err)->
+redis.client 'setname', 'wikipedias', (err)->
    # swallow errors
 
 prettify.skipNodeFiles()
@@ -24,7 +24,7 @@ if process.env['SENTRY_DSN']
       sentry  = new raven.Client process.env['SENTRY_DSN']
 
       sentry.patchGlobal()
-      process.on 'uncaughtException',      (err)-> console.error prettify.render err 
+      process.on 'uncaughtException',      (err)-> console.error prettify.render err
       Promise.onPossiblyUnhandledRejection (err)->
          sentry.captureError err
          console.error prettify.render err

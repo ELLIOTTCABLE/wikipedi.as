@@ -3,10 +3,10 @@ var URL          = require('url')
   , requestAsync = require('request-promise')
 
             Promise.longStackTraces() // “... a substantial performance penalty.” Okay.
-var redis = Promise.promisifyAll(require('redis').createClient(undefined, process.env['REDIS_HOST']))
+var redis = Promise.promisifyAll(require('redis').createClient(process.env['REDIS_URL']))
   , auth = process.env['REDIS_AUTH']
     if (auth) redis.auth(auth)
-    redis.client('setname', "wikipedi.as:disambiguation-sync", function(err){
+    redis.client('setname', "wikipedias:disambiguation-sync", function(err){
       /* Swallow errors. */ })
 
 // Populate SENTRY_DSN if you wish to report exceptions to http://getsentry.com/ (=
