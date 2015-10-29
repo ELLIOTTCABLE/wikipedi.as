@@ -1,11 +1,17 @@
-{  "name":        "wikipedi.as",
-   "description": "The short-URL generator for Wikimedia properties.",
-   "scripts":     {},
-   "env": {
-      "DEBUG": {
-         "required": true },
-      "NEW_RELIC_ENABLED": "false",
-      "STUNNEL_ENABLED":   "false"
-  },
-  "addons":       [ "heroku-redis" ]
+{  "name":        "wikipedi.as"
+ , "description": "The short-URL generator for Wikimedia properties."
+ , "repository":  "http://github.com/ELLIOTTCABLE/wikipedi.as"
+
+ , "scripts":     {}
+ , "env": {
+      "DEBUG":              { "required": true }
+    , "NEW_RELIC_ENABLED":    "false"
+    , "STUNNEL_ENABLED":      "false"
+   }
+
+ , "addons":       [ "heroku-redis" ]
+ , "buildpacks": [
+      { url: "https://github.com/heroku/heroku-buildpack-redis.git" }
+    , { url: "https://github.com/heroku/heroku-buildpack-nodejs" }
+   ]
 }
