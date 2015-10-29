@@ -13,7 +13,7 @@ var redis = Promise.promisifyAll(require('redis').createClient(undefined, proces
 if (process.env['SENTRY_DSN']) try {
    var raven = require('raven')
      , sentry = new raven.Client(process.env['SENTRY_DSN'])
-   
+
    sentry.patchGlobal()
    process.on('uncaughtException', function(err){
       console.error(err)
@@ -22,7 +22,7 @@ if (process.env['SENTRY_DSN']) try {
       sentry.captureError(err)
       console.error(err)
       process.exit(1) })
-      
+
 } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e }
 
 var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.json')).languages
@@ -59,11 +59,11 @@ Promise.all(languages.map(function(language){
 
 function pushSubCategories(category, language, depth){ if (typeof depth != 'number') depth = 1
    if (seen.indexOf(category) !== -1) return;
-   
+
    transaction.sadd('lang:'+language.tag+':cats', category)
    seen.push(category)
    console.log(language.tag+' '+depth+':', category)
-   
+
    return requestAsync({
       url: URL.format({
          protocol: 'http:'
@@ -81,7 +81,7 @@ function pushSubCategories(category, language, depth){ if (typeof depth != 'numb
     , json: true
     , transform: function(resp){ return resp.query.categorymembers }
    })
-   
+
    .map(function(member){
       // Do I need to do something with member.pageid, here? Not sure if I need it for further
       // API calls into the MediaWiki system.

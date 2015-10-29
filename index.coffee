@@ -5,7 +5,7 @@ mustache     = require 'mustache'
 marked       = require 'marked'
 prettify     = new (require 'pretty-error')
 Promise      = require 'bluebird'
-requestAsync = require 'request-promise' 
+requestAsync = require 'request-promise'
 
 redis = Promise.promisifyAll require('redis').createClient undefined, process.env['REDIS_HOST']
 redis.auth auth if auth = process.env['REDIS_AUTH'] # Should probably wrap the rest in the callback
@@ -20,9 +20,9 @@ Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
 if process.env['SENTRY_DSN']
    try
       raven = require 'raven'
-      
+
       sentry  = new raven.Client process.env['SENTRY_DSN']
-      
+
       sentry.patchGlobal()
       process.on 'uncaughtException',      (err)-> console.error prettify.render err 
       Promise.onPossiblyUnhandledRejection (err)->
@@ -46,19 +46,19 @@ wikipedias = (incoming, outgoing)->
    key = url.pathname.slice 1
    key = url.query.key unless key.length
    key = decodeURIComponent key
-   
+
    # If we have previously resolved this key, respond with that.
    redis.getAsync "article:#{key}:url"
    .then (resolved)-> if resolved?
       outgoing.statusCode = 301
       outgoing.setHeader 'Location', resolved
       return outgoing.end 'Bye!'
-   
+
    else
       redis.lrangeAsync 'langs', 0, -1
       .then (langs)->
          articleExistsIn key, langs
-         
+
          # ... we now know where the article exists, and what its normalized name is.
          .then ({article, lang})->
             isDisambiguation(article.title, lang).then (isDisambiguation)->
@@ -70,18 +70,18 @@ wikipedias = (incoming, outgoing)->
                      outgoing.statusCode = 301
                      outgoing.setHeader 'Location', resolved
                      return outgoing.end 'Bye!'
-               
+
                # Temporarily ... at least, until I can write the code to properly handle them ...
                resolved = "http://#{lang}.wikipedia.org/wiki/#{article.title}"
                outgoing.statusCode = 301
                outgoing.setHeader 'Location', resolved
                return outgoing.end 'Bye!'
-         
+
          # ... If we can't find any article by this title on *any* Wikipedia,
          .error (err)->
             outgoing.statusCode = 404
             outgoing.end err.message
-      
+
 
 # Determine if an article exists on *any* Wikipedia (within `langs`). Returns a promise for an
 # `{ title: <normalized title>, lang: <language code> }`. If no language matches the title in
@@ -91,9 +91,9 @@ articleExistsIn = (title, langs)->
       articleExists(title, lang)
       .then (article)-> { article: article, lang: lang }
       .error skip
-   
+
    ), -> Promise.reject new ReferenceError "'#{title}' could not be found on any Wikipedia"
-   
+
    scan()
 
 # Determines if an article with the given title exists on Wikipedia. Returns a promise for the
@@ -110,7 +110,7 @@ articleExists = (title, lang)->
       .then ({query})->
          page = query.pages[Object.keys(query.pages)[0]]
          if page.missing?
-            return Promise.reject new ReferenceError "'#{page.title}' was not found" 
+            return Promise.reject new ReferenceError "'#{page.title}' was not found"
          return page
 
 # Splits our disambiguation-category cache into manageable chunks, and queries Wikipedia as many
@@ -126,7 +126,7 @@ isDisambiguation = (title, lang)->
       set.push category
       sets
    , [[]] )
-   
+
    # ... dispatch a request for each set of 49 categories, to see if the article belongs in any
    .map (set)->
       requestAsync
@@ -140,7 +140,7 @@ isDisambiguation = (title, lang)->
          headers: { 'User-Agent': user_agent }
          json: true
          transform: (resp)-> resp.query.pages[Object.keys(resp.query.pages)[0]]
-   
+
    .reduce( (containing, page)->
       containing.concat page.categories || []
    , [] )
@@ -179,19 +179,19 @@ app = connect()
 # TODO: I should probably cache this.
 .use (i, o, next)->
    return next() unless i.url == '/'
-   
+
    redis.scardAsync('articles')
    .then (count)->
       view =
          count: count
          markdown: -> (content, r)-> marked r content
          framework: nest_template templates.framework
-         
+
          fn: -> (number)->
             "<sup id='ref#{number}' class='fnref'><a href='#fn#{number}'>(#{number})</a></sup>"
-         
+
          footnote: -> (content, r)-> register_footnote.call this, marked r content
-      
+
       o.setHeader 'Content-Type', 'text/html'
       o.end mustache.render templates.landing, view, templates
 
