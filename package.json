@@ -1,5 +1,5 @@
 {     "author" : "ELLIOTTCABLE (http://ell.io/tt)"
-   
+
 ,       "name" : "wikipedi.as"
 ,   "homepage" : "http://wikipedi.as"
 ,    "private" :  true
@@ -25,11 +25,11 @@
                      , "supervisor"             : "~0.5.7"
                      , "lodash"                 : "~2.4.1"                                        }
 
-, "optionalDependencies" 
+, "optionalDependencies"
                      :{"raven"                  : "~0.6.3"}
 
 ,  "devDependencies" :{"bower"                  : "~1.3.5"
-                     , "gulp"                   : "gulpjs/gulp#c331837"                           
+                     , "gulp"                   : "~3.7.0"
                      , "gulp-util"              : "~2.2.17"
                      , "gulp-shell"             : "~0.2.5"
                      , "gulp-if"                : "~1.2.0"
