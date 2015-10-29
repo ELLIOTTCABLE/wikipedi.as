@@ -7,6 +7,13 @@ prettify     = new (require 'pretty-error')
 Promise      = require 'bluebird'
 requestAsync = require 'request-promise'
 
+newrelic     = undefined
+raven        = undefined
+
+if process.env['NEW_RELIC_ENABLED'] == 'true'
+   try newrelic = require 'newrelic'
+   catch err then throw err if err.code != 'MODULE_NOT_FOUND'
+
 redis = Promise.promisifyAll require('redis').createClient process.env['REDIS_URL']
 redis.auth auth if auth = process.env['REDIS_AUTH'] # Should probably wrap the rest in the callback
 
@@ -16,12 +23,15 @@ redis.client 'setname', 'wikipedias', (err)->
 prettify.skipNodeFiles()
 Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
 
+PACKAGE    = JSON.parse require('fs').readFileSync __dirname + '/package.json'
+
 # Populate SENTRY_DSN if you wish to report exceptions to http://getsentry.com/ (=
 if process.env['SENTRY_DSN']
    try
       raven = require 'raven'
 
-      sentry  = new raven.Client process.env['SENTRY_DSN']
+      sentry  = new raven.Client process.env['SENTRY_DSN'],
+         release: PACKAGE.version
 
       sentry.patchGlobal()
       process.on 'uncaughtException',      (err)-> console.error prettify.render err
@@ -31,7 +41,6 @@ if process.env['SENTRY_DSN']
    catch err then throw err if err.code != 'MODULE_NOT_FOUND'
 
 
-PACKAGE    = JSON.parse require('fs').readFileSync __dirname + '/package.json'
 user_agent = "#{PACKAGE.name}/#{PACKAGE.version} (#{PACKAGE.homepage}; by #{PACKAGE.author})"
 templates  = require('glob').sync("Resources/*.mustache").reduce ((templates, filename)->
    name = require('path').basename filename, '.mustache'
