@@ -162,7 +162,6 @@ isDisambiguation = (title, language)->
    # the value of pageprops.disambiguation. (No, this makes no sense.) Hence the *existence test*
    # below, instead of a truthiness test.
    .then ({query})->
-      console.log '%j', query
       page = query.pages[Object.keys(query.pages)[0]]
       return page.pageprops?.disambiguation?
 
