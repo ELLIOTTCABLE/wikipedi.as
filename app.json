@@ -1,17 +1,27 @@
-{  "name":        "wikipedi.as"
- , "description": "The short-URL generator for Wikimedia properties."
- , "repository":  "http://github.com/ELLIOTTCABLE/wikipedi.as"
+{
+  "name": "wikipedi.as",
+  "website": "http://wikipedi.as/",
+  "description": "A short-URL and permalink resolver for Wikimedia properties.",
+  "repository": "http://github.com/ELLIOTTCABLE/wikipedi.as",
 
- , "scripts":     {}
- , "env": {
-      "DEBUG":              { "required": true }
-    , "NEW_RELIC_ENABLED":    "false"
-    , "STUNNEL_ENABLED":      "false"
-   }
+  "scripts": {
+    "postdeploy": "./sync_disambiguation_categories.js"
+  },
 
- , "addons":       [ "heroku-redis" ]
- , "buildpacks": [
-      { url: "https://github.com/heroku/heroku-buildpack-redis.git" }
-    , { url: "https://github.com/heroku/heroku-buildpack-nodejs" }
-   ]
+  "env": {
+    "DEBUG": { "required": true },
+    "NEW_RELIC_ENABLED": "false",
+    "STUNNEL_ENABLED": "false",
+    "HEROKU_APP_NAME": { "required": true },
+    "HEROKU_PARENT_APP_NAME": {}
+  },
+
+  "image": "heroku/nodejs",
+  "addons": [
+    "heroku-redis"
+  ],
+  "buildpacks": [
+    { "url": "https://github.com/heroku/heroku-buildpack-redis.git" },
+    { "url": "https://github.com/heroku/heroku-buildpack-nodejs" }
+  ]
 }
