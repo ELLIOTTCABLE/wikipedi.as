@@ -28,6 +28,7 @@ prettify.skipNodeFiles()
 Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
 
 PACKAGE    = JSON.parse require('fs').readFileSync __dirname + '/package.json'
+languages  = JSON.parse(require('fs').readFileSync __dirname + '/languages.json').languages
 
 # Populate SENTRY_DSN if you wish to report exceptions to http://getsentry.com/ (=
 if process.env['SENTRY_DSN']
@@ -73,50 +74,48 @@ wikipedias = (incoming, outgoing)->
       return outgoing.end 'Bye!'
 
    else
-      redis.lrangeAsync 'langs', 0, -1
-      .then (langs)->
-         debug "'%s' isn't cached,", key
-         articleExistsIn key, langs
+      debug "'%s' isn't cached,", key
+      articleExistsIn key, languages
 
-         # ... we now know where the article exists, and what its normalized name is.
-         .then ({article, lang})->
-            isDisambiguation(article.title, lang).then (isDisambiguation)->
-               unless isDisambiguation
-                  resolved = "http://#{lang}.wikipedia.org/wiki/#{article.title}"
-                  return redis.setAsync "article:#{key}:url", resolved
-                  .then -> redis.saddAsync "articles", key
-                  .then ->
-                     debug "'%s' cached to DB: ", key, resolved
-                     outgoing.statusCode = 301
-                     outgoing.setHeader 'Location', resolved
-                     return outgoing.end 'Bye!'
+      # ... we now know where the article exists, and what its normalized name is.
+      .then ({article, language})->
+         isDisambiguation(article.title, language).then (isDisambiguation)->
+            unless isDisambiguation
+               resolved = "http://#{language.ISO639}.wikipedia.org/wiki/#{article.title}"
+               return redis.setAsync "article:#{key}:url", resolved
+               .then -> redis.saddAsync "articles", key
+               .then ->
+                  debug "'%s' cached to DB: ", key, resolved
+                  outgoing.statusCode = 301
+                  outgoing.setHeader 'Location', resolved
+                  return outgoing.end 'Bye!'
 
-               # Temporarily ... at least, until I can write the code to properly handle them ...
-               resolved = "http://#{lang}.wikipedia.org/wiki/#{article.title}"
-               debug "'%s' is disambiguation, not cached to DB: ", key, resolved
-               outgoing.statusCode = 302
-               outgoing.setHeader 'Location', resolved
-               return outgoing.end """
-                  That's a disambiguation page.
-                  This isn't implemented yet, so I'll just redirect you.
-               """
+            # Temporarily ... at least, until I can write the code to properly handle them ...
+            resolved = "http://#{language.ISO639}.wikipedia.org/wiki/#{article.title}"
+            debug "'%s' is disambiguation, not cached to DB: ", key, resolved
+            outgoing.statusCode = 302
+            outgoing.setHeader 'Location', resolved
+            return outgoing.end """
+               That's a disambiguation page.
+               This isn't implemented yet, so I'll just redirect you.
+            """
 
-         # ... If we can't find any article by this title on *any* Wikipedia,
-         .error (err)->
-            debug "'%s' doesn't exist on any of our Wikipedias", key
-            outgoing.statusCode = 404
-            outgoing.end err.message
+      # ... If we can't find any article by this title on *any* Wikipedia,
+      .catch ReferenceError, (err)->
+         debug "'%s' doesn't exist on any of our Wikipedias", key
+         outgoing.statusCode = 404
+         outgoing.end err.message
 
 
 # Determine if an article exists on *any* Wikipedia (within `langs`). Returns a promise for an
-# `{ title: <normalized title>, lang: <language code> }`. If no language matches the title in
-# question, the promise is rejected.
-articleExistsIn = (title, langs)->
-   scan = langs.reduceRight ((skip, lang)->->
-      articleExists(title, lang)
+# `{ title: <normalized title>, language: language-info-object }`. If no language matches the title
+# in question, the promise is rejected.
+articleExistsIn = (title, languages)->
+   scan = languages.reduceRight ((skip, language)->->
+      articleExists(title, language)
       .then (article)->
-         debug "'%s' found on %s: %j", title, lang, article
-         return { article: article, lang: lang }
+         debug "'%s' found in %s: %j", title, language.name, article
+         return { article: article, language: language }
       .error skip
 
    ), -> Promise.reject new ReferenceError "'#{title}' could not be found on any Wikipedia"
@@ -125,10 +124,10 @@ articleExistsIn = (title, langs)->
 
 # Determines if an article with the given title exists on Wikipedia. Returns a promise for the
 # article's Wikipedia info. Rejects if no such article exists.
-articleExists = (title, lang)->
+articleExists = (title, language)->
       requestAsync
          url: url
-            hostname: "#{lang}.wikipedia.org"
+            hostname: "#{language.ISO639}.wikipedia.org"
             query:
                action: 'query', prop: 'info'
                titles: title
@@ -137,44 +136,33 @@ articleExists = (title, lang)->
       .then ({query})->
          page = query.pages[Object.keys(query.pages)[0]]
          if page.missing?
-            debug "'%s' doesn't exist on %s.", title, lang
-            return Promise.reject new ReferenceError "'#{page.title}' was not found"
+            debug "'%s' doesn't exist in %s.", title, language.name
+            return Promise.reject new ReferenceError(
+               "'#{page.title}' was not found in '#{language.name}'")
          return page
 
-# Splits our disambiguation-category cache into manageable chunks, and queries Wikipedia as many
-# times as necessary to determine if the article passed is in any of those categories.
-# (Returns a promise.)
-isDisambiguation = (title, lang)->
-   redis.smembersAsync "lang:#{lang}:cats"
-   # ... split all the d-categories we know about into sets of 49 apiece, to appease the API limit
-   #     of 50 at a time
-   .reduce( (sets, category)->
-      sets.push new Array if sets[sets.length-1].length >= 49
-      set = sets[sets.length-1]
-      set.push category
-      sets
-   , [[]] )
+# Checks if a Wikimedia-properties page is marked as a __DISAMBIG__. (Thanks,
+# https://www.mediawiki.org/wiki/Extension:Disambiguator!)
+#
+# Returns a promise.
+isDisambiguation = (title, language)->
+  requestAsync
+      url: url
+         hostname: "#{language.ISO639}.wikipedia.org"
+         query:
+            action: 'query', prop: 'pageprops'
+            ppprop: 'disambiguation'
+            titles: title
+      headers: { 'User-Agent': user_agent }
+      json: true
 
-   # ... dispatch a request for each set of 49 categories, to see if the article belongs in any
-   .map (set)->
-      requestAsync
-         url: url
-            hostname: lang + '.wikipedia.org'
-            query:
-               action: 'query', prop: 'categories'
-               titles: title
-               clcategories: set.join '|'
-               cllimit: 'max'
-         headers: { 'User-Agent': user_agent }
-         json: true
-         transform: (resp)-> resp.query.pages[Object.keys(resp.query.pages)[0]]
-
-   .reduce( (containing, page)->
-      containing.concat page.categories || []
-   , [] )
-   .then (categories)->
-      debug "Disambiguation categories for '%s' (out of %d pages): %j", title, categories
-      categories.length != 0
+   # Important note: if the page is a disambiguation page, the API will return an *empty string* as
+   # the value of pageprops.disambiguation. (No, this makes no sense.) Hence the *existence test*
+   # below, instead of a truthiness test.
+   .then ({query})->
+      console.log '%j', query
+      page = query.pages[Object.keys(query.pages)[0]]
+      return page.pageprops?.disambiguation?
 
 # Generate a modify-able copy of the Wikipedia API URL
 url = (u)->

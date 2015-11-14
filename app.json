@@ -4,10 +4,6 @@
   "description": "A short-URL and permalink resolver for Wikimedia properties.",
   "repository": "http://github.com/ELLIOTTCABLE/wikipedi.as",
 
-  "scripts": {
-    "postdeploy": "./sync_disambiguation_categories.js"
-  },
-
   "env": {
     "DEBUG": { "required": false },
     "HEROKU_APP_NAME": { "required": false },
