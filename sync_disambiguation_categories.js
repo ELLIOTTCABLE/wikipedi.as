@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-var URL          = require('url')
+var debug        = require('debug')('wikipedias:sync')
+  , URL          = require('url')
   , Promise      = require('bluebird')
   , requestAsync = require('request-promise')
 
@@ -34,7 +35,7 @@ var languages = JSON.parse(require('fs').readFileSync(__dirname + '/languages.js
    PACKAGE.name+"/"+PACKAGE.version
       +" ("+PACKAGE.homepage+"; by "+PACKAGE.author+") DisambiguationCrawler"
 
-console.log('-- User-Agent:', require('util').inspect(user_agent))
+debug('User-Agent: %j', user_agent)
 transaction = redis.multi()
 transaction.del('langs')
 
@@ -52,9 +53,10 @@ Promise.all(languages.map(function(language){
    Promise.all(languages.map(function(language){
       return redis.scardAsync('lang:'+language.tag+':cats') }))
    .then(function(counts){
-      console.log('-- All done!')
-      languages.forEach(function(language, idx){
-         console.log(language.name+': '+counts[idx]) })
+      debug('All done!')
+      if (debug.enabled)
+         languages.forEach(function(language, idx){
+            debug('%s: %d', language.name, counts[idx]) })
       return redis.quitAsync()
 }) })
 
@@ -64,7 +66,7 @@ function pushSubCategories(category, language, depth){ if (typeof depth != 'numb
 
    transaction.sadd('lang:'+language.tag+':cats', category)
    seen.push(category)
-   console.log(language.tag+' '+depth+':', category)
+   debug('%s %d: %s', language.tag, depth, category)
 
    return requestAsync({
       url: URL.format({
