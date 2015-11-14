@@ -1,0 +1,21 @@
+{
+  "name": "wikipedi.as",
+  "website": "http://wikipedi.as/",
+  "description": "A short-URL and permalink resolver for Wikimedia properties.",
+  "repository": "http://github.com/ELLIOTTCABLE/wikipedi.as",
+
+  "env": {
+    "DEBUG": { "required": false },
+    "HEROKU_APP_NAME": { "required": false },
+    "HEROKU_PARENT_APP_NAME": { "required": false },
+    "NPM_CONFIG_PRODUCTION": "false"
+  },
+
+  "image": "heroku/nodejs",
+  "addons": [
+    "heroku-redis"
+  ],
+  "buildpacks": [
+    { "url": "https://github.com/heroku/heroku-buildpack-nodejs" }
+  ]
+}

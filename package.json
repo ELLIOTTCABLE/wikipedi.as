@@ -3,13 +3,13 @@
 ,       "name" : "wikipedi.as"
 ,   "homepage" : "http://wikipedi.as"
 ,    "private" :  true
-,    "version" : "0.0.1"
+,    "version" : "0.0.2"
 
 , "repository" : { "type":"git", "url":"https://github.com/ELLIOTTCABLE/wikipedi.as.git" }
 
 ,    "scripts" :{
-            "hi!" : "npm install && bower install && gulp build"
-   ,      "start" : "supervisor --extensions 'js|coffee' --quiet --exec coffee ./index.coffee"    }
+     "prepublish" : "bower install && gulp build"
+   ,      "start" : "coffee ./index.coffee"    }
 
 ,          "engines" :{"node":"~0.10.26"}
 ,     "dependencies" :{"coffee-script"          : "~1.7.1"
@@ -21,12 +21,14 @@
                      , "request-promise"        : "~0.0.3"
                      , "pretty-error"           : "~0.1.18"
                      , "bluebird"               : "~1.2.1"
-                     , "redis"                  : "~0.10.1"
+                     , "redis"                  : "~2.2.5"
                      , "supervisor"             : "~0.5.7"
+                     , "debug"                  : "~2.2.0"
                      , "lodash"                 : "~2.4.1"                                        }
 
 , "optionalDependencies"
-                     :{"raven"                  : "~0.6.3"}
+                     :{"raven"                  : "~0.8.1"
+                     , "newrelic"               : "~1.22.2"                                       }
 
 ,  "devDependencies" :{"bower"                  : "~1.3.5"
                      , "gulp"                   : "~3.7.0"

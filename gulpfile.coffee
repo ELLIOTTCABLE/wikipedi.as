@@ -6,7 +6,7 @@ plugin = (name)-> require "gulp-#{name}"
 
 paths =
    resources: lazy().pipe gulp.dest, './Resources'
-   
+
    css: [ './Resources/main.less' ]
    js:
       synch: [    # <head>-loaded (start)
@@ -53,13 +53,13 @@ gulp.task 'build-js', ['clean-js'], ->
       .pipe plugin('if') /[.]coffee$/, plugin('coffee') bare: yes, header: no
       .pipe plugin('concat') 'synch.concat.js'
       .pipe js()
-   
+
    asynch = gulp
       .src paths.js.asynch
       .pipe plugin('if') /[.]coffee$/, plugin('coffee') bare: yes, header: no
       .pipe plugin('concat') 'asynch.concat.js'
       .pipe js()
-   
+
    return require('stream-combiner') synch, asynch
 
 gulp.task 'watch-js', (done)->
@@ -68,7 +68,7 @@ gulp.task 'watch-js', (done)->
          .pipe plugin('if') /[.]coffee$/, handle plugin('coffee') bare: yes, header: no
          .pipe plugin('concat') 'synch.concat.js'
          .pipe js()
-   
+
    plugin('watch') glob: paths.js.asynch, (_)->
       _  .pipe plugin('debug') title: 'asynch'
          .pipe plugin('if') /[.]coffee$/, handle plugin('coffee') bare: yes, header: no
