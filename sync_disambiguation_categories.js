@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var URL          = require('url')
   , Promise      = require('bluebird')
   , requestAsync = require('request-promise')
