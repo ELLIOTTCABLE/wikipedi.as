@@ -46,6 +46,8 @@ if process.env['SENTRY_DSN']
       debug 'Sentry connected'
    catch err then throw err if err.code != 'MODULE_NOT_FOUND'
 
+port = parseInt(process.env['PORT']) || 1337
+
 
 user_agent = "#{PACKAGE.name}/#{PACKAGE.version} (#{PACKAGE.homepage}; by #{PACKAGE.author})"
 templates  = require('glob').sync("Resources/*.mustache").reduce ((templates, filename)->
@@ -248,4 +250,5 @@ app.use (err, _, o, next)->
    o.end 'Server error: ' + err.message
    throw err
 
-app.listen 1337
+debug 'Listening on: %d', port
+app.listen port
