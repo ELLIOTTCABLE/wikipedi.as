@@ -1,4 +1,4 @@
-debug        = require('debug') 'wikipedi.as:http'
+debug        = require('debug') 'wikipedias:http'
 URL          = require 'url'
 connect      = require 'connect'
 st           = require 'st'
@@ -22,7 +22,7 @@ redis.auth auth if auth = process.env['REDIS_AUTH'] # Should probably wrap the r
 
 redis.client 'setname', 'wikipedias', (err)->
    # swallow errors
-debug 'Redis connected'
+debug 'Redis connected to `%s`', redis.address
 
 prettify.skipNodeFiles()
 Promise.longStackTraces() # “... a substantial performance penalty.” Okay.
