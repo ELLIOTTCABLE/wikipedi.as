@@ -9,7 +9,7 @@
 
 ,    "scripts" :{
      "prepublish" : "bower install && gulp build"
-   ,      "start" : "supervisor --extensions 'js|coffee' --quiet --exec coffee ./index.coffee"    }
+   ,      "start" : "coffee ./index.coffee"    }
 
 ,          "engines" :{"node":"~0.10.26"}
 ,     "dependencies" :{"coffee-script"          : "~1.7.1"
